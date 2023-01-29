@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/css/zTreeStyle/zTreeStyle.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="row">
+  <div class="col-md-4"></div>
+  <div class="col-md-4">
+    <div class="form-group">
+      <label for="data">数据</label>
+      <textarea class="form-control" id="data" name="data"></textarea>
+    </div>
+    <div class="btn btn-primary" id="submit">统计</div>
+  </div>
+  <div class="col-md-4"></div>
+</div>
+<div class="row">
+  <div class="col-md-3"></div>
+  <div class="col-md-6">
+    <input type="text" id="total">
+    <table class="table">
+      <thead>
+      <tr>
+        <th>品种</th>
+        <th>数量</th>
+        <th>单价</th>
+        <th>总价</th>
+      </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="col-md-3"></div>
+</div>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/js/jquery.ztree.all.min.js"></script>
+<script src="/js/global.js"></script>
+<script>
+  initMenu();
+  $.get("/getSeriesList",function(result){
+    for(let i = 0; i < result.length; i++){
+      $("#seriesList").append("<option value='"+result[i].name+"'>"+result[i].name+"</option>");
+    }
+  });
+
+  let notArray = ["联盟房屋创作系列","莲木灿SIN9创作系列","KABU-DAO徽章#0001-#5000","精神股东","齐天+斗战胜佛","齐天","考斯猫 公益系列",
+    "《十二星录》盲盒","考斯猫 真我系列","LOVEPEACE！创世纪盲盒系列","LOVEPEACE!创世纪盲盒系列","虚拟女生","@加密男孩 Crypto Boy《第一期》",
+    "无聊女生系列","开拓者·身份卡","@加密男孩 Crypto Boy《第二期》","蔬菜·大团圆","精神股东八期","海娃碎片"];
+
+  $("#submit").click(function(){
+    // $.post("/statisticsPosition",{
+    //   "data": $("#data").val()
+    // },function(result){
+    //   if(!result.success){
+    //     alert(result.message);
+    //   }
+    // });
+    let data = JSON.parse($("#data").val());
+    $("#tbody").html("");
+    for(let i = 0; i < data.length; i++){
+      let name = data[i].name;
+      let count = data[i].count;
+      let price = data[i].price;
+      let totalPrice = price!='-'?(count*price):'-';
+
+      if(!notArray.includes(name)){
+        $("#tbody").append("" +
+                "<tr>" +
+                " <td>"+name+"</td>" +
+                " <td><input class='attr' id='count-"+i+"' type='text' value='"+count+"'></td>" +
+                " <td><input class='attr' id='price-"+i+"' type='text' value='"+price+"'></td>" +
+                " <td><input id='totalPrice-"+i+"' type='text' value='"+totalPrice+"'></td>" +
+                "</tr>" +
+                "");
+      }
+    }
+    executeTotal();
+
+    $("input[class=attr]").change(function(){
+      let selectedId = $(this).attr("id");
+      executePrice(selectedId);
+    });
+  });
+
+  function executePrice(selectedId){
+    let index = selectedId.split("-")[1];
+    let count = $("#count-"+index).val();
+    let price = $("#price-"+index).val();
+    let totalPrice = price!='-'?(count*price):'-';
+    $("#totalPrice-"+index).val(totalPrice);
+    executeTotal();
+  }
+
+  function executeTotal(){
+    let totalPriceList = $("input[id|=totalPrice]");
+    let total = 0;
+    for(let i = 0; i < totalPriceList.length; i++){
+      let totalPrice = totalPriceList[i].value;
+      if(totalPrice != '-')
+        total += parseInt(totalPrice);
+    }
+    $("#total").val(total);
+  }
+</script>
+</body>
+</html>
